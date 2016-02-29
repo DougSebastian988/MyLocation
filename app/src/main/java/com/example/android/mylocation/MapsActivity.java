@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -17,7 +18,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.Map;
 
-public class MapsActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MapsActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener  {
         private GoogleApiClient mGoogleApiClient;
         // Request code to use when launching the resolution activity
         private static final int REQUEST_RESOLVE_ERROR = 1001;
@@ -46,6 +48,7 @@ public class MapsActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private Location mLastLocation;
     private double latitude, longitude, result;
+    LocationRequest mLocationRequest;
 
     @Override
     public void onConnected(Bundle connectionHint) {
@@ -58,14 +61,25 @@ public class MapsActivity extends AppCompatActivity implements GoogleApiClient.C
             latitude = mLastLocation.getLatitude();
             longitude = mLastLocation.getLongitude();
             mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title("ME"));
-            CameraUpdate center= CameraUpdateFactory.newLatLng(new LatLng(latitude, longitude));
-            CameraUpdate zoom=CameraUpdateFactory.zoomTo(15);
-
-            mMap.moveCamera(center);
-            mMap.animateCamera(zoom);
+            CameraUpdate centerAndZoom = CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 17);
+            mMap.moveCamera(centerAndZoom);
             mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         }
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
 
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mLastLocation = location;
+        latitude = mLastLocation.getLatitude();
+        longitude = mLastLocation.getLongitude();
+        mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title("ME"));
+        CameraUpdate centerAndZoom = CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 17);
+        mMap.moveCamera(centerAndZoom);
     }
 
 
